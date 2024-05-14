@@ -22,6 +22,7 @@
 #include "stm32g0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,20 +120,6 @@ void PendSV_Handler(void)
   /* USER CODE END PendSV_IRQn 1 */
 }
 
-/**
-  * @brief This function handles System tick timer.
-  */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
-}
-
 /******************************************************************************/
 /* STM32G0xx Peripheral Interrupt Handlers                                    */
 /* Add here the Interrupt Handlers for the used peripherals.                  */
@@ -146,7 +133,12 @@ void SysTick_Handler(void)
 void TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM14_IRQn 0 */
-
+	if(LL_TIM_IsActiveFlag_UPDATE(TIM14))
+	{
+		LL_GPIO_TogglePin(MOT_STEP_GPIO_Port, MOT_STEP_Pin);
+		LL_TIM_ClearFlag_UPDATE(TIM14);
+	}
+	//printf("toggle!\n");
   /* USER CODE END TIM14_IRQn 0 */
   /* USER CODE BEGIN TIM14_IRQn 1 */
 

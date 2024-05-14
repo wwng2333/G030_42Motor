@@ -25,7 +25,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "EventRecorder.h"
+#include "stdio.h"
+#include "u8g2.h"
+#include "oled_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+static u8g2_t u8g2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +70,8 @@ void stepper_rotate(uint8_t dir, uint8_t step);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	EventRecorderInitialize(EventRecordAll, 1U);
+	EventRecorderStart();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -83,7 +87,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+	printf("CPU @ %d Hz\n", SystemCoreClock);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -92,13 +96,27 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+	u8g2_Setup_ssd1306_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8x8_byte_hw_i2c, u8x8_gpio_and_delay_hw);
+	u8g2_InitDisplay(&u8g2);
+	u8g2_SetPowerSave(&u8g2, 0);
+	
+	LL_TIM_EnableCounter(TIM14);
+	LL_TIM_EnableAllOutputs(TIM14);
+	LL_TIM_CC_EnableChannel(TIM14, LL_TIM_CHANNEL_CH1);
+	LL_TIM_EnableIT_UPDATE(TIM14);
 	LL_GPIO_ResetOutputPin(MOT_EN_GPIO_Port, MOT_EN_Pin);
+	LL_GPIO_SetOutputPin(MOT_DIR_GPIO_Port, MOT_DIR_Pin);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		u8g2_FirstPage(&u8g2);
+		do
+		{
+			draw(&u8g2);
+		} while (u8g2_NextPage(&u8g2));
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -153,27 +171,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void stepper_rotate(uint8_t dir, uint8_t step)
-{
-	uint8_t i;
-	if(dir == 1)
-	{
-		LL_GPIO_SetOutputPin(MOT_DIR_GPIO_Port, MOT_DIR_Pin);
-	}
-	else
-	{
-		LL_GPIO_ResetOutputPin(MOT_DIR_GPIO_Port, MOT_DIR_Pin);
-	}
-	
-	for(i=0; i<step; i++)
-	{
-		LL_GPIO_SetOutputPin(MOT_STEP_GPIO_Port, MOT_STEP_Pin);
-		LL_mDelay(1);
-		LL_GPIO_ResetOutputPin(MOT_STEP_GPIO_Port, MOT_STEP_Pin);
-		LL_mDelay(1);
-	}
-}
 
 /* USER CODE END 4 */
 
