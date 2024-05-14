@@ -49,6 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+char sprintf_tmp[16];
 static u8g2_t u8g2;
 uint16_t output = 0;
 uint16_t step = 0;
@@ -136,18 +137,15 @@ int main(void)
 			rpm = 0;
 		}
 		printf("adc=%d, out=%d, step=%d, rpm=%d\n", ADC_Value, output, step, rpm);
-		if(output > 0)
-		{
-
-		}
-		else
-		{
-			LL_TIM_DisableAllOutputs(TIM14);
-		}
+		
 		u8g2_FirstPage(&u8g2);
 		do
 		{
-			draw(&u8g2);
+			u8g2_SetFontMode(&u8g2, 1);
+			u8g2_SetFontDirection(&u8g2, 0);
+			u8g2_SetFont(&u8g2, u8g2_font_7Segments_26x42_mn);
+			sprintf(sprintf_tmp, "%d", rpm);
+			u8g2_DrawStr(&u8g2, 0, 45, sprintf_tmp);
 		} while (u8g2_NextPage(&u8g2));
 		//LL_mDelay(50);
     /* USER CODE END WHILE */
