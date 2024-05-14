@@ -50,6 +50,9 @@
 
 /* USER CODE BEGIN PV */
 static u8g2_t u8g2;
+uint16_t output = 0;
+uint16_t step = 0;
+uint8_t rpm = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,6 +99,7 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+	HAL_ADCEx_Calibration_Start(&hadc1);
 	u8g2_Setup_ssd1306_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8x8_byte_hw_i2c, u8x8_gpio_and_delay_hw);
 	u8g2_InitDisplay(&u8g2);
 	u8g2_SetPowerSave(&u8g2, 0);
@@ -112,11 +116,40 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, 10);
+		uint16_t ADC_Value = HAL_ADC_GetValue(&hadc1);
+		if(ADC_Value>20)
+		{
+			LL_GPIO_ResetOutputPin(MOT_EN_GPIO_Port, MOT_EN_Pin);
+			output = (ADC_Value - 10) * (100 - 500) / (4000 - 10) + 500;
+			LL_TIM_SetAutoReload(TIM14, output);
+			LL_TIM_CC_EnableChannel(TIM14, LL_TIM_CHANNEL_CH1);
+			step = 1000000/output;
+			rpm = step * 0.01875;
+		}
+		else
+		{
+			LL_GPIO_SetOutputPin(MOT_EN_GPIO_Port, MOT_EN_Pin);
+			output = 0;
+			step = 0;
+			rpm = 0;
+		}
+		printf("adc=%d, out=%d, step=%d, rpm=%d\n", ADC_Value, output, step, rpm);
+		if(output > 0)
+		{
+
+		}
+		else
+		{
+			LL_TIM_DisableAllOutputs(TIM14);
+		}
 		u8g2_FirstPage(&u8g2);
 		do
 		{
 			draw(&u8g2);
 		} while (u8g2_NextPage(&u8g2));
+		//LL_mDelay(50);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
